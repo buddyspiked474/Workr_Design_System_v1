@@ -1,0 +1,10 @@
+{
+  "description": "Enterprise HCM admin platform offering a responsive design system with customizable UI components and tokens for efficient human capital management.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

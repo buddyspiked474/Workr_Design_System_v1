@@ -1,0 +1,228 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+
+@import 'tailwindcss';
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+/* ============================================================
+   WORKR DESIGN SYSTEM — Token definitions
+   Tailwind v4 @theme block: all CSS custom properties are
+   exposed as Tailwind utility classes automatically.
+   Convention:  --color-{name} → bg-{name} / text-{name}
+   ============================================================ */
+
+@theme inline {
+  /* ── Typography ── */
+  --font-sans:    "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono:    "DM Mono", ui-monospace, "Courier New", monospace;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* ── Border radii ── */
+  --radius-sm:   0.25rem;   /* 4px  — inputs, tight elements */
+  --radius-md:   0.375rem;  /* 6px  — buttons, badges */
+  --radius-lg:   0.5rem;    /* 8px  — cards, popovers */
+  --radius-xl:   0.75rem;   /* 12px — modals, sheets */
+  --radius-2xl:  1rem;      /* 16px — hero cards */
+  --radius-full: 9999px;    /* pill — status badges */
+
+  /* ── Color mappings (semantic → CSS vars) ── */
+  --color-background:          var(--background);
+  --color-foreground:          var(--foreground);
+  --color-card:                var(--card);
+  --color-card-foreground:     var(--card-foreground);
+  --color-popover:             var(--popover);
+  --color-popover-foreground:  var(--popover-foreground);
+
+  --color-primary:             var(--primary);
+  --color-primary-foreground:  var(--primary-foreground);
+  --color-primary-subtle:      var(--primary-subtle);
+  --color-primary-text:        var(--primary-text);
+
+  --color-secondary:            var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted:            var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent:            var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive:            var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-subtle:     var(--destructive-subtle);
+  --color-destructive-text:       var(--destructive-text);
+
+  --color-success:            var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-subtle:     var(--success-subtle);
+  --color-success-text:       var(--success-text);
+
+  --color-warning:            var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-warning-subtle:     var(--warning-subtle);
+  --color-warning-text:       var(--warning-text);
+
+  --color-info:            var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-subtle:     var(--info-subtle);
+  --color-info-text:       var(--info-text);
+
+  --color-border:       var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-input:        var(--input);
+  --color-ring:         var(--ring);
+
+  /* ── Sidebar ── */
+  --color-sidebar:                   var(--sidebar);
+  --color-sidebar-foreground:        var(--sidebar-foreground);
+  --color-sidebar-hover:             var(--sidebar-hover);
+  --color-sidebar-active:            var(--sidebar-active);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border:            var(--sidebar-border);
+  --color-sidebar-ring:              var(--sidebar-ring);
+
+  /* ── HCM Status tokens ──
+     Each status has a bg (subtle tint) and fg (readable text on that tint).
+     Name follows workr convention: status-{state} / status-{state}-fg     */
+  --color-status-active:        var(--status-active);
+  --color-status-active-fg:     var(--status-active-fg);
+  --color-status-pending:       var(--status-pending);
+  --color-status-pending-fg:    var(--status-pending-fg);
+  --color-status-revoked:       var(--status-revoked);
+  --color-status-revoked-fg:    var(--status-revoked-fg);
+  --color-status-expired:       var(--status-expired);
+  --color-status-expired-fg:    var(--status-expired-fg);
+  --color-status-onleave:       var(--status-onleave);
+  --color-status-onleave-fg:    var(--status-onleave-fg);
+  --color-status-terminated:    var(--status-terminated);
+  --color-status-terminated-fg: var(--status-terminated-fg);
+
+  /* ── Chart palette (5-color dataviz set) ── */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+/* ============================================================
+   ROOT VALUES — all oklch for perceptual uniformity
+   ============================================================ */
+:root {
+  --radius: 0.375rem;
+
+  /* Page surfaces */
+  --background:         oklch(0.972 0.003 252);
+  --foreground:         oklch(0.195 0.016 258);
+  --card:               oklch(1 0 0);
+  --card-foreground:    oklch(0.195 0.016 258);
+  --popover:            oklch(1 0 0);
+  --popover-foreground: oklch(0.195 0.016 258);
+
+  /* Primary — muted slate-blue (enterprise weight, not consumer purple) */
+  --primary:            oklch(0.455 0.135 263);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-subtle:     oklch(0.952 0.012 263);
+  --primary-text:       oklch(0.38 0.12 263);
+
+  /* Secondary */
+  --secondary:            oklch(0.962 0.004 252);
+  --secondary-foreground: oklch(0.28 0.014 258);
+
+  /* Muted */
+  --muted:            oklch(0.962 0.004 252);
+  --muted-foreground: oklch(0.52 0.012 258);
+
+  /* Accent */
+  --accent:            oklch(0.952 0.010 263);
+  --accent-foreground: oklch(0.38 0.09 263);
+
+  /* Destructive / Error */
+  --destructive:            oklch(0.575 0.205 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --destructive-subtle:     oklch(0.955 0.028 25);
+  --destructive-text:       oklch(0.42 0.185 25);
+
+  /* Success */
+  --success:            oklch(0.595 0.14 152);
+  --success-foreground: oklch(0.99 0 0);
+  --success-subtle:     oklch(0.948 0.055 152);
+  --success-text:       oklch(0.36 0.12 152);
+
+  /* Warning */
+  --warning:            oklch(0.718 0.148 76);
+  --warning-foreground: oklch(0.20 0.016 258);
+  --warning-subtle:     oklch(0.962 0.055 80);
+  --warning-text:       oklch(0.42 0.148 76);
+
+  /* Info */
+  --info:            oklch(0.565 0.158 234);
+  --info-foreground: oklch(0.99 0 0);
+  --info-subtle:     oklch(0.948 0.055 234);
+  --info-text:       oklch(0.38 0.14 234);
+
+  /* Structure */
+  --border:        oklch(0.905 0.005 252);
+  --border-strong: oklch(0.84 0.008 252);
+  --input:         oklch(0.905 0.005 252);
+  --ring:          oklch(0.455 0.135 263);
+
+  /* Sidebar — dark navy */
+  --sidebar:                   oklch(0.185 0.022 263);
+  --sidebar-foreground:        oklch(0.72 0.012 258);
+  --sidebar-hover:             oklch(0.24 0.018 263);
+  --sidebar-active:            oklch(0.455 0.135 263);
+  --sidebar-accent-foreground: oklch(0.92 0.008 258);
+  --sidebar-border:            oklch(0.27 0.016 263);
+  --sidebar-ring:              oklch(0.455 0.135 263);
+
+  /* HCM Status tokens — pastel bg + legible dark fg */
+  --status-active:        oklch(0.915 0.075 145);
+  --status-active-fg:     oklch(0.335 0.115 145);
+  --status-pending:       oklch(0.942 0.072 80);
+  --status-pending-fg:    oklch(0.395 0.122 76);
+  --status-revoked:       oklch(0.932 0.005 252);
+  --status-revoked-fg:    oklch(0.415 0.010 258);
+  --status-expired:       oklch(0.932 0.055 25);
+  --status-expired-fg:    oklch(0.465 0.148 25);
+  --status-onleave:       oklch(0.915 0.075 235);
+  --status-onleave-fg:    oklch(0.365 0.118 235);
+  --status-terminated:    oklch(0.932 0.004 252);
+  --status-terminated-fg: oklch(0.435 0.010 258);
+
+  /* Chart palette */
+  --chart-1: oklch(0.455 0.135 263);
+  --chart-2: oklch(0.595 0.14 152);
+  --chart-3: oklch(0.625 0.155 198);
+  --chart-4: oklch(0.718 0.148 76);
+  --chart-5: oklch(0.555 0.175 305);
+}
+
+/* ============================================================
+   BASE LAYER
+   ============================================================ */
+@layer base {
+  * { border-color: var(--color-border); }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: var(--radius-full);
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-muted-foreground); }
+}
