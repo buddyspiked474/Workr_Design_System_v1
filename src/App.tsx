@@ -595,22 +595,75 @@ function TopBar({ title, onMenuToggle }: { title: string; onMenuToggle?: () => v
 // ──────────────────────────────────────────────────────────────────────────────
 // SIDEBAR NAV
 // ──────────────────────────────────────────────────────────────────────────────
-interface NavItem { id: string; label: string; icon: React.ReactNode; badge?: number }
+interface NavItem  { id: string; label: string; icon: React.ReactNode; badge?: number; pulse?: boolean }
+interface NavGroup { label: string; items: NavItem[] }
 
-const NAV_MAIN: NavItem[] = [
-  { id: "dashboard",  label: "Dashboard",        icon: <IGrid size={15} /> },
-  { id: "workforce",  label: "Workforce",         icon: <IUsers size={15} />, badge: 847 },
-  { id: "payroll",    label: "Payroll",           icon: <IDollar size={15} /> },
-  { id: "time",       label: "Time & Attendance", icon: <IClock size={15} /> },
-  { id: "onboarding", label: "Onboarding",        icon: <IUserPlus size={15} />, badge: 3 },
-  { id: "benefits",   label: "Benefits",          icon: <IInbox size={15} /> },
-  { id: "reports",    label: "Reports",           icon: <IBarChart size={15} /> },
+const IActivityFeed = (p: IP) => sv(p, <><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></>)
+const IUtilization  = (p: IP) => sv(p, <><rect x="2" y="3" width="4" height="18" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="18" y="13" width="4" height="8" rx="1"/></>)
+const IProjects     = (p: IP) => sv(p, <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="4" rx="1"/><rect x="14" y="14" width="7" height="4" rx="1"/></>)
+const IInvoicing    = (p: IP) => sv(p, <><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></>)
+const IOffboarding  = (p: IP) => sv(p, <><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="23" y1="11" x2="17" y2="11"/></>)
+const IAttendance   = (p: IP) => sv(p, <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>)
+const ILeaves       = (p: IP) => sv(p, <><path d="M17 8C8 10 5.9 16.17 3.82 19.34a1 1 0 0 0 1.66 1.1C7 19 8.5 18 10 17c5-2 12-5 14-12z"/><path d="M17 8l-1 7"/></>)
+const IRetention    = (p: IP) => sv(p, <><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></>)
+const IExpenses     = (p: IP) => sv(p, <><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></>)
+const ISwitch       = (p: IP) => sv(p, <><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></>)
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: "Operations",
+    items: [
+      { id: "liveboard",   label: "Liveboard",    icon: <IActivityFeed size={15} />, pulse: true },
+      { id: "utilization", label: "Utilization",  icon: <IUtilization size={15} /> },
+      { id: "projects",    label: "Projects",     icon: <IProjects size={15} /> },
+      { id: "invoicing",   label: "Invoicing",    icon: <IInvoicing size={15} /> },
+    ],
+  },
+  {
+    label: "HR Operations",
+    items: [
+      { id: "onboarding",  label: "Onboarding",          icon: <IUserPlus size={15} />, badge: 3 },
+      { id: "offboarding", label: "Offboarding",         icon: <IOffboarding size={15} /> },
+      { id: "attendance",  label: "Attendance",          icon: <IAttendance size={15} /> },
+      { id: "leaves",      label: "Leaves",              icon: <ILeaves size={15} /> },
+      { id: "retention",   label: "Retention Early Warn", icon: <IRetention size={15} /> },
+    ],
+  },
+  {
+    label: "Payroll",
+    items: [
+      { id: "payroll-runs", label: "Payroll Runs",       icon: <IDollar size={15} /> },
+      { id: "expenses",     label: "Expenses and Advance", icon: <IExpenses size={15} /> },
+    ],
+  },
 ]
 
-const NAV_BOTTOM: NavItem[] = [
+const NAV_SECONDARY: NavItem[] = [
   { id: "admin",    label: "Admin",    icon: <IShield size={15} /> },
   { id: "settings", label: "Settings", icon: <ISettings size={15} /> },
 ]
+
+function NavBtn({ item, active, onSelect }: { item: NavItem; active: boolean; onSelect: () => void }) {
+  return (
+    <button onClick={onSelect}
+      className={cn(
+        "flex w-full items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-colors min-w-0",
+        active
+          ? "bg-sidebar-active text-primary-foreground font-medium"
+          : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
+      )}>
+      <span className={cn("shrink-0", active ? "opacity-100" : "opacity-55")}>{item.icon}</span>
+      <span className="flex-1 text-left truncate">{item.label}</span>
+      {item.pulse && !active && <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />}
+      {item.badge !== undefined && (
+        <span className={cn("rounded-full px-1.5 py-0.5 text-xs leading-none shrink-0",
+          active ? "bg-white/20 text-white" : "bg-sidebar-border text-sidebar-foreground")}>
+          {item.badge}
+        </span>
+      )}
+    </button>
+  )
+}
 
 function Sidebar({ active, onSelect, mobileOpen }: { active: string; onSelect: (id: string) => void; mobileOpen?: boolean }) {
   return (
@@ -627,49 +680,46 @@ function Sidebar({ active, onSelect, mobileOpen }: { active: string; onSelect: (
               <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <span className="text-sm font-semibold text-sidebar-accent-foreground tracking-tight">WorkR HCM</span>
+          <span className="text-sm font-semibold text-sidebar-accent-foreground tracking-tight">Workr</span>
         </div>
-        {/* Main nav */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
-          <p className="px-2 mb-2 text-xs font-medium uppercase tracking-wider" style={{ color: "oklch(0.55 0.012 258)" }}>Main</p>
-          {NAV_MAIN.map(item => (
-            <button key={item.id} onClick={() => onSelect(item.id)}
-              className={cn(
-                "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                active === item.id
-                  ? "bg-sidebar-active text-primary-foreground font-medium"
-                  : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
-              )}>
-              <span className={active === item.id ? "opacity-100" : "opacity-60"}>{item.icon}</span>
-              <span className="flex-1 text-left">{item.label}</span>
-              {item.badge !== undefined && (
-                <span className={cn("rounded-full px-1.5 py-0.5 text-xs leading-none",
-                  active === item.id ? "bg-white/20 text-white" : "bg-sidebar-hover text-sidebar-foreground")}>
-                  {item.badge}
-                </span>
-              )}
-            </button>
+
+        {/* Grouped nav */}
+        <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-4">
+          {NAV_GROUPS.map(group => (
+            <div key={group.label}>
+              <p className="px-2.5 mb-1 text-xs font-semibold uppercase tracking-wider" style={{ color: "oklch(0.50 0.012 258)" }}>
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map(item => (
+                  <NavBtn key={item.id} item={item} active={active === item.id} onSelect={() => onSelect(item.id)} />
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
-        {/* Bottom nav + user */}
-        <div className="px-2 py-3 border-t border-sidebar-border space-y-0.5">
-          {NAV_BOTTOM.map(item => (
-            <button key={item.id} onClick={() => onSelect(item.id)}
-              className={cn(
-                "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                active === item.id
-                  ? "bg-sidebar-active text-primary-foreground font-medium"
-                  : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground"
-              )}>
-              <span className="opacity-60">{item.icon}</span>
-              {item.label}
-            </button>
+
+        {/* Bottom */}
+        <div className="px-2 pb-2 border-t border-sidebar-border pt-2 space-y-1">
+          {NAV_SECONDARY.map(item => (
+            <NavBtn key={item.id} item={item} active={active === item.id} onSelect={() => onSelect(item.id)} />
           ))}
-          <div className="mt-2 flex items-center gap-2.5 px-2.5 py-2">
-            <div className="h-7 w-7 rounded-full bg-sidebar-active/30 flex items-center justify-center text-xs font-semibold text-sidebar-accent-foreground shrink-0">AP</div>
+
+          {/* Switch to Admin */}
+          <button className="flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 mt-1 transition-colors text-sidebar-foreground hover:bg-sidebar-hover hover:text-sidebar-accent-foreground border border-sidebar-border">
+            <ISwitch size={14} className="opacity-60 shrink-0" />
+            <div className="text-left min-w-0">
+              <p className="text-xs font-medium truncate text-sidebar-accent-foreground">Switch to Admin Dashb…</p>
+              <p className="text-xs uppercase tracking-wider" style={{ color: "oklch(0.50 0.012 258)" }}>Global Controls</p>
+            </div>
+          </button>
+
+          {/* Workspace chip */}
+          <div className="flex items-center gap-2.5 rounded-md px-2.5 py-2.5 bg-sidebar-hover mt-1">
+            <div className="h-7 w-7 rounded-md bg-sidebar-active flex items-center justify-center text-xs font-bold text-primary-foreground shrink-0">N</div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-sidebar-accent-foreground truncate">Alex Park</p>
-              <p className="text-xs truncate" style={{ color: "oklch(0.55 0.012 258)" }}>HR Admin</p>
+              <p className="text-xs font-semibold text-sidebar-accent-foreground truncate">Nexora Labs</p>
+              <p className="text-xs truncate" style={{ color: "oklch(0.50 0.012 258)" }}>Pro plan · 24 seats</p>
             </div>
           </div>
         </div>
@@ -1117,55 +1167,538 @@ function LayoutSection() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// APP ROOT
+// LIVEBOARD PAGE — WorkR DS adaptation of the live presence + map view
 // ──────────────────────────────────────────────────────────────────────────────
-const SECTION_MAP: Record<string, string> = {
-  dashboard:  "foundations",
-  admin:      "foundations",
-  settings:   "foundations",
-  workforce:  "components",
-  onboarding: "components",
-  benefits:   "components",
-  payroll:    "data",
-  time:       "data",
-  reports:    "layout",
+const PRESENCE_WORKERS = [
+  { id: 1, name: "Sarah Chen",       initials: "SC", role: "Sr. Engineer",    location: "San Francisco HQ", status: "active",  since: "08:42 AM", type: "office" },
+  { id: 2, name: "James Rodriguez",  initials: "JR", role: "DevOps Engineer", location: "Remote — Seattle", status: "active",  since: "09:15 AM", type: "remote" },
+  { id: 3, name: "Yuki Tanaka",      initials: "YT", role: "Eng. Manager",    location: "San Francisco HQ", status: "active",  since: "07:58 AM", type: "office" },
+  { id: 4, name: "David Kim",        initials: "DK", role: "UX Designer",     location: "Remote — Denver",  status: "away",    since: "10:03 AM", type: "remote" },
+  { id: 5, name: "Lin Wei",          initials: "LW", role: "Comp. Analyst",   location: "New York HQ",      status: "active",  since: "09:30 AM", type: "office" },
+]
+
+type WorkerStatus = "active" | "away" | "offline"
+
+function PresenceAvatar({ initials, status, size = "md" }: { initials: string; status: WorkerStatus; size?: "sm" | "md" }) {
+  const dotColor = status === "active" ? "bg-success" : status === "away" ? "bg-warning" : "bg-muted-foreground"
+  const sz = size === "sm" ? "h-7 w-7 text-xs" : "h-9 w-9 text-xs"
+  return (
+    <div className="relative shrink-0">
+      <div className={cn("rounded-full bg-primary-subtle flex items-center justify-center font-semibold text-primary-text", sz)}>{initials}</div>
+      <span className={cn("absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-card", dotColor)} />
+    </div>
+  )
 }
 
-const PAGE_TITLES: Record<string, string> = {
-  dashboard:  "Design System — Foundations",
-  workforce:  "Design System — Components",
-  payroll:    "Design System — Data Display",
-  time:       "Design System — Data Display",
-  onboarding: "Design System — Components",
-  benefits:   "Design System — Components",
-  reports:    "Design System — Layout",
-  admin:      "Design System — Foundations",
-  settings:   "Design System — Foundations",
+function MapPlaceholder() {
+  return (
+    <div className="absolute inset-0 overflow-hidden">
+      {/* Base terrain */}
+      <svg width="100%" height="100%" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+            <path d="M 60 0 L 0 0 0 60" fill="none" stroke="oklch(0.88 0.006 252)" strokeWidth="0.5"/>
+          </pattern>
+        </defs>
+        {/* Ocean / background */}
+        <rect width="1200" height="700" fill="oklch(0.94 0.012 235)" />
+        {/* Grid overlay */}
+        <rect width="1200" height="700" fill="url(#grid)" />
+
+        {/* Land masses — stylized, not precise */}
+        {/* India subcontinent */}
+        <path d="M 580 80 L 720 60 L 820 90 L 900 150 L 950 250 L 920 370 L 850 440 L 780 500 L 720 530 L 680 510 L 640 460 L 600 380 L 560 280 L 550 180 Z"
+          fill="oklch(0.93 0.014 88)" stroke="oklch(0.86 0.012 88)" strokeWidth="0.75" />
+        {/* Pakistan */}
+        <path d="M 440 80 L 580 80 L 560 180 L 520 240 L 470 220 L 420 180 L 400 130 Z"
+          fill="oklch(0.92 0.012 88)" stroke="oklch(0.86 0.012 88)" strokeWidth="0.75" />
+        {/* Bangladesh */}
+        <path d="M 780 270 L 820 260 L 840 310 L 810 360 L 780 340 L 770 300 Z"
+          fill="oklch(0.92 0.014 88)" stroke="oklch(0.86 0.012 88)" strokeWidth="0.75" />
+        {/* Nepal / foothills (lighter) */}
+        <path d="M 560 180 L 720 160 L 760 200 L 720 220 L 640 230 L 580 220 Z"
+          fill="oklch(0.90 0.010 120)" stroke="oklch(0.84 0.010 120)" strokeWidth="0.5" opacity="0.7" />
+        {/* Sri Lanka */}
+        <path d="M 720 540 L 740 530 L 755 560 L 745 580 L 725 575 Z"
+          fill="oklch(0.92 0.012 88)" stroke="oklch(0.86 0.012 88)" strokeWidth="0.75" />
+        {/* Central Asia top */}
+        <path d="M 0 0 L 480 0 L 440 80 L 400 130 L 350 80 L 200 40 L 0 60 Z"
+          fill="oklch(0.91 0.010 88)" stroke="oklch(0.85 0.010 88)" strokeWidth="0.5" />
+        {/* Bottom land */}
+        <path d="M 0 600 L 400 620 L 500 680 L 300 700 L 0 700 Z"
+          fill="oklch(0.92 0.012 88)" stroke="oklch(0.86 0.012 88)" strokeWidth="0.5" />
+
+        {/* Major rivers — subtle blue lines */}
+        <path d="M 680 120 Q 660 200 650 300 Q 640 380 620 440" fill="none" stroke="oklch(0.78 0.045 235)" strokeWidth="1.5" opacity="0.5" />
+        <path d="M 720 140 Q 730 220 740 300 Q 750 360 760 400" fill="none" stroke="oklch(0.78 0.045 235)" strokeWidth="1.2" opacity="0.4" />
+
+        {/* City dots with rings */}
+        {[
+          { x: 650, y: 310, label: "New Delhi",    r: 5, active: true  },
+          { x: 470, y: 195, label: "Karachi",       r: 4, active: false },
+          { x: 780, y: 320, label: "Dhaka",         r: 3, active: true  },
+          { x: 720, y: 430, label: "Chennai",       r: 4, active: false },
+          { x: 640, y: 440, label: "Mumbai",        r: 5, active: true  },
+          { x: 800, y: 260, label: "Kolkata",       r: 4, active: true  },
+          { x: 600, y: 200, label: "Jaipur",        r: 3, active: false },
+          { x: 700, y: 220, label: "Lucknow",       r: 3, active: false },
+        ].map((c, i) => (
+          <g key={i}>
+            {c.active && <circle cx={c.x} cy={c.y} r={c.r + 4} fill="none" stroke="oklch(0.455 0.135 263)" strokeWidth="1" opacity="0.4" />}
+            <circle cx={c.x} cy={c.y} r={c.r} fill={c.active ? "oklch(0.455 0.135 263)" : "oklch(0.60 0.008 258)"} opacity={c.active ? 0.85 : 0.5} />
+            <text x={c.x + c.r + 3} y={c.y + 4} fontSize="8" fill="oklch(0.38 0.012 258)" fontFamily="Inter, sans-serif" opacity="0.8">{c.label}</text>
+          </g>
+        ))}
+
+        {/* Worker pin markers */}
+        {[
+          { x: 640, y: 440, initials: "SC", status: "active"  },
+          { x: 800, y: 260, initials: "YT", status: "active"  },
+          { x: 650, y: 310, initials: "LW", status: "active"  },
+        ].map((w, i) => (
+          <g key={i}>
+            <circle cx={w.x} cy={w.y - 22} r={14} fill="white" stroke="oklch(0.595 0.14 152)" strokeWidth="2.5" />
+            <text x={w.x} y={w.y - 18} fontSize="8" fontWeight="700" textAnchor="middle" fill="oklch(0.335 0.115 145)" fontFamily="Inter, sans-serif">{w.initials}</text>
+            <path d={`M ${w.x} ${w.y - 8} L ${w.x} ${w.y}`} stroke="oklch(0.595 0.14 152)" strokeWidth="2" />
+          </g>
+        ))}
+
+        {/* Map attribution strip */}
+        <rect x="0" y="688" width="1200" height="12" fill="oklch(0.97 0.002 252)" opacity="0.9" />
+        <text x="6" y="697" fontSize="7" fill="oklch(0.55 0.012 258)" fontFamily="Inter, sans-serif" opacity="0.8">© OpenStreetMap contributors · Leaflet</text>
+      </svg>
+    </div>
+  )
+}
+
+function LiveboardPage() {
+  const [view, setView]              = useState<"tracking" | "roster">("tracking")
+  const [filterText, setFilterText]  = useState("")
+  const [statusFilter, setStatus]    = useState("all")
+  const [typeFilter, setType]        = useState("all")
+  const [locationFilter, setLocation]= useState("all")
+  const [selectedWorker, setSelected]= useState<number | null>(null)
+
+  const activeCount  = PRESENCE_WORKERS.filter(w => w.status === "active").length
+  const awayCount    = PRESENCE_WORKERS.filter(w => w.status === "away").length
+
+  const filtered = PRESENCE_WORKERS.filter(w => {
+    const matchText   = !filterText || w.name.toLowerCase().includes(filterText.toLowerCase()) || w.role.toLowerCase().includes(filterText.toLowerCase())
+    const matchStatus = statusFilter === "all" || w.status === statusFilter
+    const matchType   = typeFilter === "all" || w.type === typeFilter
+    return matchText && matchStatus && matchType
+  })
+
+  const miniFilterCls = "h-8 pl-2.5 pr-7 text-xs rounded-md border border-border bg-card text-foreground appearance-none cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition-colors hover:border-border-strong"
+
+  return (
+    <div className="flex flex-col h-full min-h-0">
+      {/* Page header */}
+      <div className="px-6 py-3.5 border-b border-border bg-card shrink-0">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div>
+            <h1 className="text-base font-semibold text-foreground leading-none">Liveboard</h1>
+            <div className="flex items-center gap-1.5 mt-1">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
+              </span>
+              <span className="text-xs text-muted-foreground">Live stream · 3 office hubs + remote workers</span>
+            </div>
+          </div>
+          <div className="ml-auto flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-success" />
+              <span className="text-xs text-muted-foreground">{activeCount} active</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-warning" />
+              <span className="text-xs text-muted-foreground">{awayCount} away</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter bar */}
+      <div className="px-4 py-2.5 border-b border-border bg-card shrink-0 flex items-center gap-2 flex-wrap">
+        {/* Text search */}
+        <div className="relative w-56">
+          <ISearch size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+          <input
+            className="h-8 w-full pl-8 pr-3 text-xs rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 transition-colors"
+            placeholder="Filter by name or role…"
+            value={filterText}
+            onChange={e => setFilterText(e.target.value)}
+          />
+        </div>
+
+        {/* View toggle */}
+        <div className="flex overflow-hidden rounded-md border border-border ml-auto">
+          {(["tracking", "roster"] as const).map((v, i) => (
+            <button key={v} onClick={() => setView(v)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-colors",
+                i > 0 && "border-l border-border",
+                view === v ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}>
+              {v === "tracking" ? <><IActivityFeed size={12} /> Live Tracking Map</> : <><IProjects size={12} /> Roster Matrix</>}
+            </button>
+          ))}
+        </div>
+
+        {/* Filter dropdowns */}
+        <div className="flex items-center gap-1.5">
+          {[
+            { label: "Status", value: statusFilter, set: setStatus, opts: [["all","Status: All"],["active","Active"],["away","Away"],["offline","Offline"]] },
+            { label: "Type",   value: typeFilter,   set: setType,   opts: [["all","Type: All"],["office","Office"],["remote","Remote"],["hybrid","Hybrid"]] },
+            { label: "Loc",    value: locationFilter,set: setLocation,opts: [["all","Location: All"],["sf","San Francisco"],["ny","New York"],["remote","Remote"]] },
+          ].map(f => (
+            <div key={f.label} className="relative">
+              <select value={f.value} onChange={e => f.set(e.target.value)} className={miniFilterCls}>
+                {f.opts.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+              </select>
+              <IChevDown size={11} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Content — split */}
+      <div className="flex flex-1 min-h-0">
+
+        {/* ── Presence Feed ── */}
+        <div className="w-72 border-r border-border flex flex-col bg-card shrink-0 min-h-0">
+          {/* Feed header */}
+          <div className="px-4 py-2.5 border-b border-border flex items-center gap-2 shrink-0">
+            <IActivityFeed size={13} className="text-muted-foreground" />
+            <span className="text-xs font-semibold text-foreground uppercase tracking-wide">Active Presence Feed</span>
+            <span className="ml-auto rounded-full bg-muted border border-border px-1.5 py-0.5 text-xs font-mono text-muted-foreground leading-none">{filtered.length}</span>
+          </div>
+
+          {/* Sub-header */}
+          <div className="px-4 py-2 border-b border-border shrink-0">
+            <p className="text-xs text-muted-foreground">
+              <span className="font-medium text-foreground">{PRESENCE_WORKERS.length}</span> people ·{" "}
+              <span className="font-medium text-success-text">{activeCount}</span> active now
+            </p>
+          </div>
+
+          {/* List */}
+          <div className="flex-1 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 py-12 px-4 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                  <IUsers size={20} />
+                </div>
+                <p className="text-xs font-medium text-foreground">No active people</p>
+                <p className="text-xs text-muted-foreground">No active people match the filter.</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-border">
+                {filtered.map(w => (
+                  <button key={w.id} onClick={() => setSelected(selectedWorker === w.id ? null : w.id)}
+                    className={cn("flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30",
+                      selectedWorker === w.id && "bg-primary-subtle/40")}>
+                    <PresenceAvatar initials={w.initials} status={w.status as WorkerStatus} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{w.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{w.role}</p>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className={cn("h-1.5 w-1.5 rounded-full", w.status === "active" ? "bg-success" : "bg-warning")} />
+                        <span className="text-xs text-muted-foreground truncate">{w.location}</span>
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground font-mono mt-0.5 shrink-0">{w.since}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Feed footer */}
+          <div className="px-4 py-2.5 border-t border-border shrink-0 flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">Live · updates every 30s</span>
+            <div className="flex h-1.5 w-1.5 items-center justify-center">
+              <span className="animate-ping absolute h-1.5 w-1.5 rounded-full bg-success opacity-60" />
+              <span className="relative h-1.5 w-1.5 rounded-full bg-success" />
+            </div>
+          </div>
+        </div>
+
+        {/* ── Map / Roster panel ── */}
+        <div className="flex-1 relative overflow-hidden bg-muted/20 min-h-0">
+
+          {view === "tracking" ? (
+            <>
+              <MapPlaceholder />
+
+              {/* Map legend card */}
+              <div className="absolute top-4 left-4 z-10 bg-card border border-border rounded-lg shadow-md px-3.5 py-3">
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wide mb-2">Live Tracking Map</p>
+                <div className="flex flex-col gap-1.5">
+                  {[
+                    { dot: "bg-success", label: "Active", count: activeCount },
+                    { dot: "bg-warning", label: "Away",   count: awayCount },
+                  ].map(l => (
+                    <div key={l.label} className="flex items-center gap-2">
+                      <span className={cn("h-2 w-2 rounded-full shrink-0", l.dot)} />
+                      <span className="text-xs text-muted-foreground">{l.label}</span>
+                      <span className="ml-auto text-xs font-mono font-medium text-foreground">{l.count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected worker popover */}
+              {selectedWorker !== null && (() => {
+                const w = PRESENCE_WORKERS.find(x => x.id === selectedWorker)!
+                return (
+                  <div className="absolute top-4 right-4 z-10 w-60 bg-card border border-border rounded-lg shadow-lg overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+                      <PresenceAvatar initials={w.initials} status={w.status as WorkerStatus} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">{w.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{w.role}</p>
+                      </div>
+                    </div>
+                    <div className="px-4 py-3 space-y-1.5">
+                      {[
+                        ["Status",   w.status.charAt(0).toUpperCase() + w.status.slice(1)],
+                        ["Location", w.location],
+                        ["Active since", w.since],
+                        ["Work type", w.type.charAt(0).toUpperCase() + w.type.slice(1)],
+                      ].map(([k, v]) => (
+                        <div key={k} className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-muted-foreground">{k}</span>
+                          <span className="text-xs font-medium text-foreground text-right">{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="px-4 py-2.5 border-t border-border flex gap-2">
+                      <Button variant="secondary" size="sm" className="flex-1 text-xs">Message</Button>
+                      <Button size="sm" className="flex-1 text-xs">View profile</Button>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Map stats footer */}
+              <div className="absolute bottom-4 left-4 z-10 bg-card border border-border rounded-lg shadow-md px-3.5 py-2">
+                <p className="text-xs text-muted-foreground font-mono">
+                  <span className="font-medium text-foreground">{filtered.length}</span> workers ·{" "}
+                  <span className="font-medium text-foreground">3</span> workhubs
+                </p>
+              </div>
+            </>
+          ) : (
+            /* Roster matrix view */
+            <div className="overflow-auto h-full p-6">
+              <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-foreground">Roster Matrix</h3>
+                  <Badge variant="secondary">Sep 4, 2026</Badge>
+                </div>
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide">Employee</th>
+                      {["Mon","Tue","Wed","Thu","Fri"].map(d => (
+                        <th key={d} className="px-3 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">{d}</th>
+                      ))}
+                      <th className="px-3 py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {PRESENCE_WORKERS.map(w => (
+                      <tr key={w.id} className="hover:bg-muted/20 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2.5">
+                            <PresenceAvatar initials={w.initials} status={w.status as WorkerStatus} size="sm" />
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{w.name}</p>
+                              <p className="text-xs text-muted-foreground">{w.role}</p>
+                            </div>
+                          </div>
+                        </td>
+                        {["M","T","W","T","F"].map((d, i) => (
+                          <td key={i} className="px-3 py-3 text-center">
+                            <span className={cn("inline-flex h-6 w-6 items-center justify-center rounded text-xs font-medium",
+                              i < 4
+                                ? w.status === "active" ? "bg-success-subtle text-success-text" : "bg-warning-subtle text-warning-text"
+                                : "bg-muted text-muted-foreground"
+                            )}>
+                              {i < 4 ? (w.type === "office" ? "O" : "R") : "–"}
+                            </span>
+                          </td>
+                        ))}
+                        <td className="px-3 py-3 text-center">
+                          <StatusBadge status={w.status === "active" ? "active" : "pending"} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="px-4 py-2.5 border-t border-border bg-muted/20 flex items-center gap-4">
+                  {[
+                    { label: "O = Office", cls: "bg-success-subtle text-success-text" },
+                    { label: "R = Remote", cls: "bg-info-subtle text-info-text" },
+                    { label: "– = Not scheduled", cls: "bg-muted text-muted-foreground" },
+                  ].map(l => (
+                    <div key={l.label} className="flex items-center gap-1.5">
+                      <span className={cn("inline-flex h-4 w-4 items-center justify-center rounded text-xs font-medium", l.cls)}>
+                        {l.label[0]}
+                      </span>
+                      <span className="text-xs text-muted-foreground">{l.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SIMPLE PLACEHOLDER for unbuilt sections
+// ──────────────────────────────────────────────────────────────────────────────
+function PlaceholderPage({ title }: { title: string }) {
+  return (
+    <div className="p-6 max-w-5xl mx-auto">
+      <SectionHeader title={title} />
+      <Card>
+        <EmptyState
+          icon={<ILayers size={24} />}
+          title="Coming soon"
+          description="This section is not yet built in the design system showcase."
+          action={<Badge variant="secondary">Placeholder</Badge>}
+        />
+      </Card>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// APP ROOT
+// ──────────────────────────────────────────────────────────────────────────────
+const DS_PAGES = ["ds-foundations", "ds-components", "ds-data", "ds-layout"]
+
+function TopBarLiveboard({ onMenuToggle }: { onMenuToggle?: () => void }) {
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [userOpen, setUserOpen]   = useState(false)
+  const notifRef = useRef<HTMLDivElement>(null)
+  const userRef  = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) setNotifOpen(false)
+      if (userRef.current  && !userRef.current.contains(e.target as Node))  setUserOpen(false)
+    }
+    document.addEventListener("mousedown", h)
+    return () => document.removeEventListener("mousedown", h)
+  }, [])
+
+  return (
+    <header className="h-14 flex items-center gap-3 px-4 border-b border-border bg-card shrink-0 z-10">
+      <button className="md:hidden text-muted-foreground hover:text-foreground" onClick={onMenuToggle}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div className="hidden sm:flex flex-1 max-w-sm">
+        <Input prefix={<ISearch size={13} />} placeholder="Search people, projects…" className="h-8 text-xs" />
+      </div>
+      <div className="flex items-center gap-1 ml-auto">
+        <div className="relative" ref={notifRef}>
+          <button onClick={() => setNotifOpen(o => !o)}
+            className="relative flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+            <IBell size={16} />
+            <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-destructive" />
+          </button>
+          {notifOpen && (
+            <div className="absolute right-0 top-full mt-2 w-72 rounded-lg border border-border bg-popover shadow-lg z-50 overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">Notifications</span>
+                <Badge variant="destructive">3 new</Badge>
+              </div>
+              {[
+                { text: "James Rodriguez clocked in remotely", time: "2 min ago",  type: "success" as BadgeVariant },
+                { text: "Priya Patel's leave approved",        time: "1 hr ago",   type: "info"    as BadgeVariant },
+                { text: "Payroll run scheduled for Sep 15",   time: "3 hr ago",   type: "warning" as BadgeVariant },
+              ].map((n, i) => (
+                <div key={i} className="flex gap-3 px-4 py-3 hover:bg-accent cursor-pointer transition-colors border-b border-border last:border-0">
+                  <Badge variant={n.type} className="mt-0.5 shrink-0 opacity-80">&nbsp;</Badge>
+                  <div>
+                    <p className="text-xs text-foreground">{n.text}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{n.time}</p>
+                  </div>
+                </div>
+              ))}
+              <div className="px-4 py-2.5 border-t border-border">
+                <button className="text-xs text-primary hover:underline">View all</button>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="relative" ref={userRef}>
+          <button onClick={() => setUserOpen(o => !o)}
+            className="flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent transition-colors">
+            <div className="h-7 w-7 rounded-full bg-primary-subtle flex items-center justify-center text-primary-text text-xs font-semibold">HI</div>
+            <div className="hidden sm:block text-left">
+              <p className="text-xs font-medium text-foreground leading-none">Hassan Iftikhar</p>
+              <p className="text-xs text-muted-foreground leading-none mt-0.5">Admin</p>
+            </div>
+            <IChevDown size={12} className="text-muted-foreground hidden sm:block" />
+          </button>
+          {userOpen && (
+            <div className="absolute right-0 top-full mt-2 w-52 rounded-lg border border-border bg-popover shadow-lg z-50 py-1">
+              <div className="px-3 py-2.5 border-b border-border mb-1">
+                <p className="text-xs font-semibold text-foreground">Hassan Iftikhar</p>
+                <p className="text-xs text-muted-foreground">h.iftikhar@nexora.io</p>
+              </div>
+              {[{ label: "Profile", icon: <IUser size={13} /> }, { label: "Settings", icon: <ISettings size={13} /> }].map((item, i) => (
+                <button key={i} className="flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-foreground hover:bg-accent transition-colors">
+                  <span className="opacity-60">{item.icon}</span>{item.label}
+                </button>
+              ))}
+              <div className="border-t border-border mt-1 pt-1">
+                <button className="flex w-full items-center gap-2.5 px-3 py-1.5 text-sm text-destructive-text hover:bg-destructive-subtle transition-colors">
+                  <span className="opacity-60"><ILogout size={13} /></span>Sign out
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </header>
+  )
 }
 
 export default function App() {
-  const [activeNav, setActiveNav]   = useState("dashboard")
+  const [activeNav, setActiveNav]   = useState("liveboard")
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleNav = (id: string) => { setActiveNav(id); setMobileOpen(false) }
 
-  const renderSection = () => {
-    const section = SECTION_MAP[activeNav] ?? "foundations"
-    if (section === "components")  return <ComponentsSection />
-    if (section === "data")        return <DataDisplaySection />
-    if (section === "layout")      return <LayoutSection />
-    return <FoundationsSection />
+  const isLiveboard = activeNav === "liveboard"
+  const isFullHeight = isLiveboard
+
+  const renderContent = () => {
+    if (activeNav === "liveboard")    return <LiveboardPage />
+    if (activeNav === "onboarding")   return <div className="p-6 max-w-5xl mx-auto"><ComponentsSection /></div>
+    if (activeNav === "payroll-runs") return <div className="p-6 max-w-5xl mx-auto"><DataDisplaySection /></div>
+    if (activeNav === "attendance")   return <div className="p-6 max-w-5xl mx-auto"><DataDisplaySection /></div>
+    if (activeNav === "admin" || activeNav === "settings") return <div className="p-6 max-w-5xl mx-auto"><FoundationsSection /></div>
+    return <PlaceholderPage title={NAV_GROUPS.flatMap(g => g.items).find(i => i.id === activeNav)?.label ?? activeNav} />
   }
 
   return (
     <div className="flex h-full bg-background overflow-hidden">
       <Sidebar active={activeNav} onSelect={handleNav} mobileOpen={mobileOpen} />
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <TopBar title={PAGE_TITLES[activeNav] ?? "WorkR HCM"} onMenuToggle={() => setMobileOpen(o => !o)} />
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-5xl mx-auto">
-            {renderSection()}
-          </div>
+        <TopBarLiveboard onMenuToggle={() => setMobileOpen(o => !o)} />
+        <main className={cn("flex-1 min-h-0", isFullHeight ? "overflow-hidden flex flex-col" : "overflow-y-auto")}>
+          {renderContent()}
         </main>
       </div>
     </div>
